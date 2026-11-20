@@ -17,7 +17,7 @@ O mesmo endereço estável acompanha as próximas releases e permite atualizar p
 
 1. Copie `module.json`, `scripts/` e `styles/` para `Data/modules/everest-companion/` na pasta de dados do Foundry.
 2. Reinicie o Foundry e ative **Everest — Vampire Companion** em Gerenciar Módulos no seu mundo.
-3. Abra a aba de configurações e clique em **Vampire Companion**, ou use **Shift+C**. O atalho pode ser alterado nas configurações de teclado.
+3. Na barra de ferramentas à esquerda, selecione **Tokens** e clique no **ícone de celular — Abrir Vampire Companion**, disponível para jogadores e mestre. Também há um botão **Vampire Companion** na aba de configurações e o atalho configurável **Shift+C**.
 4. Ative o dispositivo com sua chave do companion, caso solicitado. A conta do Foundry não substitui a autenticação do companion.
 
 Macro opcional:

@@ -116,6 +116,20 @@ Hooks.once("ready", () => {
   game.modules.get(MODULE_ID).api = { open: openCompanion, openExternal };
 });
 
+Hooks.on("getSceneControlButtons", (controls) => {
+  const tools = controls.tokens?.tools;
+  if (!tools) return;
+  tools[MODULE_ID] = {
+    name: MODULE_ID,
+    title: "Abrir Vampire Companion",
+    icon: "fa-solid fa-mobile-screen-button",
+    order: Object.keys(tools).length,
+    button: true,
+    visible: true,
+    onChange: () => openCompanion(),
+  };
+});
+
 Hooks.on("renderSettings", (_app, html) => {
   const root = html instanceof HTMLElement ? html : html[0];
   if (!root || root.querySelector("[data-everest-companion]")) return;
