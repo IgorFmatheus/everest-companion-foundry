@@ -27,6 +27,8 @@ jobs:
           python-version: "3.12"
       - name: Check JavaScript syntax
         run: node --check scripts/companion.js
+      - name: Test GM controls and window lifecycle
+        run: node --test tests/*.test.mjs
       - name: Validate manifest and build release assets
         env:
           RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}

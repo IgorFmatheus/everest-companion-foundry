@@ -28,7 +28,7 @@ game.modules.get("everest-companion").api.open();
 
 ## Hospedagem
 
-O site precisa publicar a alteração que permite `frame-ancestors https://vampire.everestkitchen.com.br` exclusivamente nas páginas `/companion`. O servidor não deve enviar `X-Frame-Options: DENY` nessas páginas. A variável `COMPANION_FRAME_ANCESTORS` aceita origens HTTPS exatas separadas por vírgula; não use caminhos ou curingas.
+O site precisa publicar a alteração que permite `frame-ancestors https://vampire.everestkitchen.com.br` nas páginas `/companion` e `/cms/companion` (incluindo suas subpáginas). O servidor não deve enviar `X-Frame-Options: DENY` nessas páginas. A variável `COMPANION_FRAME_ANCESTORS` aceita origens HTTPS exatas separadas por vírgula; não use caminhos ou curingas.
 
 Foundry: `https://vampire.everestkitchen.com.br/`.
 Companion: `https://everestkitchen.com.br/companion`.
@@ -74,3 +74,20 @@ Os arquivos são gerados em `dist/`, ignorado pelo Git.
 ## Validação em uma mesa
 
 O código usa a API ApplicationV2 do Foundry 13. Antes de distribuir, confirme no Foundry real: ativação individual de dois jogadores, reconexão ao reabrir, mensagens em tempo real, som após interação, minimizar/restaurar, redimensionar e acesso a arquivos/mapa/notícias/fórum. Testes locais não substituem essa validação com o servidor e os navegadores da mesa.
+
+## Painel do mestre (v0.2.0)
+
+Na ferramenta **Tokens**, o GM encontra também o ícone de controles **Painel do mestre**.
+Ele abre uma janela independente, maior, diretamente no relógio da campanha. O menu lateral
+permite administrar mensagens, NPCs, acessos e os demais recursos sem sair do Foundry.
+Também há um botão na aba Configurações. Jogadores continuam com seu companion separado.
+
+O painel exige o login de administrador do CMS. Ser GM não concede acesso ao servidor do
+companion e o módulo não armazena senhas. O endereço usa a mesma origem configurada para o
+companion e o caminho /cms/companion/clock. O servidor precisa ter a atualização que permite
+incorporar /cms/companion no Foundry autorizado pela variável COMPANION_FRAME_ANCESTORS.
+
+Macro para GM: game.modules.get("everest-companion").api.openAdmin().
+
+Minimizar preserva o painel; fechar remove o iframe. O relógio iniciado continua contando no
+servidor mesmo com a janela fechada; use **Pausar** para interrompê-lo ao terminar a sessão.
