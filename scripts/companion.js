@@ -2,11 +2,18 @@ const MODULE_ID = "everest-companion";
 const DEFAULT_URL = "https://everestkitchen.com.br/companion";
 let companion;
 let opening;
+let adminCompanion;
+let adminOpening;
 
-function companionUrl() {
+function companionUrl(admin = false) {
   const url = new URL(game.settings.get(MODULE_ID, "url"));
   if (url.protocol !== "https:" || url.username || url.password) {
     throw new Error("Informe uma URL HTTPS válida para o companion.");
+  }
+  if (admin) {
+    url.pathname = "/cms/companion/clock";
+    url.search = "";
+    url.hash = "";
   }
   return url.href;
 }
@@ -39,6 +46,34 @@ async function openCompanion() {
   }
 }
 
+async function openAdmin() {
+  if (!game.user?.isGM) {
+    ui.notifications.warn("O painel do mestre está disponível apenas para GMs.");
+    return;
+  }
+  if (adminOpening) return adminOpening;
+  adminOpening = (async () => {
+    try {
+      companionUrl(true);
+      adminCompanion ??= new AdminCompanionWindow();
+      if (adminCompanion.rendered) {
+        await adminCompanion.maximize();
+        adminCompanion.bringToFront();
+      } else {
+        await adminCompanion.render({ force: true });
+      }
+    } catch (error) {
+      console.error(`${MODULE_ID} |`, error);
+      ui.notifications.error(error.message);
+    }
+  })();
+  try {
+    await adminOpening;
+  } finally {
+    adminOpening = undefined;
+  }
+}
+
 class CompanionWindow extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     id: "everest-companion-window",
@@ -52,6 +87,8 @@ class CompanionWindow extends foundry.applications.api.ApplicationV2 {
     position: { width: 460, height: 820 },
   };
 
+  get admin() { return false; }
+
   async _renderHTML() {
     // Keep the same iframe during window updates: no extra app or SSE connection.
     if (this.content) return this.content;
@@ -64,12 +101,14 @@ class CompanionWindow extends foundry.applications.api.ApplicationV2 {
     const external = document.createElement("button");
     external.type = "button";
     external.textContent = "Abrir em outra aba";
-    external.addEventListener("click", openExternal);
+    external.addEventListener("click", () => {
+      window.open(companionUrl(this.admin), "_blank", "noopener,noreferrer");
+    });
     toolbar.append(external);
 
     const iframe = document.createElement("iframe");
-    iframe.title = "Vampire Companion";
-    iframe.src = companionUrl();
+    iframe.title = this.admin ? "Painel do mestre — Vampire Companion" : "Vampire Companion";
+    iframe.src = companionUrl(this.admin);
     iframe.allow = "autoplay";
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
     // Same-site HttpOnly session stays entirely on the companion server.
@@ -89,6 +128,22 @@ class CompanionWindow extends foundry.applications.api.ApplicationV2 {
   }
 }
 
+class AdminCompanionWindow extends CompanionWindow {
+  static DEFAULT_OPTIONS = {
+    id: "everest-companion-admin-window",
+    classes: ["everest-companion-window", "everest-companion-admin-window"],
+    window: {
+      title: "Painel do mestre — Vampire Companion",
+      icon: "fa-solid fa-sliders",
+      resizable: true,
+      minimizable: true,
+    },
+    position: { width: 1180, height: 820 },
+  };
+
+  get admin() { return true; }
+}
+
 Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "url", {
     name: "Endereço do companion",
@@ -100,6 +155,8 @@ Hooks.once("init", () => {
     onChange: async () => {
       if (companion) await companion.close();
       companion = undefined;
+      if (adminCompanion) await adminCompanion.close();
+      adminCompanion = undefined;
     },
   });
   game.keybindings.register(MODULE_ID, "open", {
@@ -113,7 +170,7 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", () => {
-  game.modules.get(MODULE_ID).api = { open: openCompanion, openExternal };
+  game.modules.get(MODULE_ID).api = { open: openCompanion, openExternal, openAdmin };
 });
 
 Hooks.on("getSceneControlButtons", (controls) => {
@@ -128,6 +185,17 @@ Hooks.on("getSceneControlButtons", (controls) => {
     visible: true,
     onChange: () => openCompanion(),
   };
+  if (game.user?.isGM) {
+    tools[`${MODULE_ID}-admin`] = {
+      name: `${MODULE_ID}-admin`,
+      title: "Painel do mestre — Vampire Companion",
+      icon: "fa-solid fa-sliders",
+      order: Object.keys(tools).length,
+      button: true,
+      visible: true,
+      onChange: () => openAdmin(),
+    };
+  }
 });
 
 Hooks.on("renderSettings", (_app, html) => {
@@ -139,4 +207,12 @@ Hooks.on("renderSettings", (_app, html) => {
   button.textContent = "Vampire Companion";
   button.addEventListener("click", () => void openCompanion());
   root.append(button);
+  if (game.user?.isGM) {
+    const adminButton = document.createElement("button");
+    adminButton.type = "button";
+    adminButton.dataset.everestCompanionAdmin = "true";
+    adminButton.textContent = "Painel do mestre — Companion";
+    adminButton.addEventListener("click", () => void openAdmin());
+    root.append(adminButton);
+  }
 });
